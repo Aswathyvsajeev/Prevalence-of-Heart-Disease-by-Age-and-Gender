@@ -1,0 +1,131 @@
+---
+title: "Heart Disease Prevalence By Age and Gender"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+  runtime: shiny
+---
+
+```{r global, include=FALSE}
+library(ggplot2)
+library(flexdashboard)
+library(shiny)
+library(plotly)
+library(DT)
+library(tidyverse)
+library(leaflet)
+heart <- read.csv("heart.csv",stringsAsFactors = TRUE)
+world <- read.csv("world.csv")
+```
+
+Main Dashboard
+================
+Column {.sidebar data-width=100}
+-----------------------------------------------------------
+```{r}
+selectInput(inputId = "FilterColumn",label = "Gender:",
+            choices = c("male","female"),
+            selected = NULL)
+         
+```
+
+Row {data-width=430}
+-----------------------------------------------------------------------
+### Heart Disease By Gender
+```{r}
+  
+renderPlotly(
+  ggplotly(ggplot(filter(heart,Sex %in% input$FilterColumn),
+  aes(x = Result))+
+                  geom_bar(width = 0.5,
+                           fill=c("dark red","dark green"))+
+                            theme_classic()+
+    labs(x="Heart Disease Status",y="Age")+
+    theme(legend.position = c(1,1),
+    axis.text.x = element_text(size = 6,face ="bold"))
+      ))
+  
+
+```
+
+### Total Values
+```{r}
+valueBox(297)  
+
+```
+
+Column {.tabset}
+-----------------------------------------------------------------------
+### Age Vs Heart Disease
+```{r}
+  
+renderPlotly(
+  ggplotly(ggplot(filter(heart,Sex %in% input$FilterColumn),
+       aes(x = Result,y = Age,fill=Result))+
+  geom_jitter()+theme(legend.text = element_text(size=6,face="bold"))+
+  geom_boxplot(size=1.2,alpha=0.3)+
+    theme_classic()+
+    theme(axis.text.x = element_text(size =6,face="bold"))+
+    labs(x="Heart Disease Status",y="Age")+
+    scale_fill_manual(values = c("dark red","dark green"))
+                                       ))
+                  
+
+```
+
+### Distribution Of Age{ .tabset}
+```{r}
+
+renderPlotly(
+  ggplotly(ggplot(filter(heart,Sex %in% input$FilterColumn),
+                  aes(x = Age,fill = Result))+
+                  geom_histogram(binwidth = 5,
+                                  colour = "black")+
+             theme_classic()+
+  scale_fill_manual(values = c("dark red","dark green"))))
+                  
+```
+
+### Additional Info{.tabset}
+```{r}
+renderPlotly(
+  ggplotly(ggplot(heart,aes(x=Age,y=HeartRate,colour=Result)) +
+  geom_point(alpha = 0.4,size = 1)+
+  scale_colour_manual(values = c("dark red","dark green"))+
+geom_smooth(fill = NA)+theme_classic()+
+    theme(axis.text.x = element_text(size =6,face="bold"))+
+    labs(x="Age",y="Maximum Heart Rate Achived")+
+  theme(legend.text = element_text(size=6,face="bold"))+
+theme(legend.text = element_text(size=6,face="bold"),
+      axis.text.x = element_text(size =6,face="bold"))))
+                  
+```
+
+Row {}
+-----------------------------------------------------------------------
+### Death Rate from Heart Disease,2017
+```{r}
+mapfinal
+                  
+```
+
+# Underlying Data
+```{r}
+datatable(heart,extensions = 'Buttons', 
+          options = list(dom = 'Bftrip',
+    buttons = c('copy','print','csv')
+  ))
+                  
+```
+
+# Additional Data
+```{r}
+datatable(world,
+          extensions = 'Buttons', 
+          options = list(dom = 'Bftrip',
+    buttons = c('copy','print','csv')
+  ))
+                  
+```
+
